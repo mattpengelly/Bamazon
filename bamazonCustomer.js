@@ -22,20 +22,25 @@ function start() {
     connection.query("SELECT * FROM products", function (err, results) {
         // if (err) throw err;
         let idArray = [];
-        console.log(" ID ||" + "    Product Name    ||     Department     || Price || Quantity ||");
+        console.log("\n╔══════════════════════════════════════════════════════════════════════════╗");
+        console.log("║  ID ||         Product Name         || Department ||  Price  || Quantity ║");
+        console.log("║-----||------------------------------||------------||---------||----------║");
+
         for (var i = 0; i < results.length; i++) {
 
-            console.log(results[i].item_ID + " || " +
-                results[i].product_name + " || " +
-                results[i].department_name + " || " +
-                results[i].price + " || " +
-                results[i].stock_quantity + " || ");
+            console.log("║" + 
+                results[i].item_ID.toString().padStart(4, " ") + " ||" +
+                results[i].product_name.padStart(29, " ") + " ||" +
+                results[i].department_name.padStart(11, " ") + " ||" +
+                ("$" + results[i].price).padStart(8, " ") + " ||" +
+                results[i].stock_quantity.toString().padStart(9, " ") + " ║");
 
             idArray.push(results[i].item_ID);
         };
 
-        console.log(idArray);
+        console.log("╚══════════════════════════════════════════════════════════════════════════╝\n");
 
+        // console.log(idArray);
 
         inquirer
             .prompt([
@@ -60,21 +65,29 @@ function start() {
                         start();
                     } else {
                         connection.query("SELECT stock_quantity FROM products WHERE item_ID = " + answer.item, function (err, results) {
+                            if (err) throw err;
 
                             console.log("Answer Item: " + answer.item);
                             console.log("Purchase Qty: " + parseInt(answer.purchQty));
-                            console.log("Qty in Stock: " + results[0]);
-                            
-                            if (parseInt(answer.purchQty) > results[0]) {
+                            console.log("Qty in Stock: " + results[0].stock_quantity);
+
+                            if (parseInt(answer.purchQty) > results[0].stock_quantity) {
                                 console.log("We don't have that many in stock. Please try again.");
                                 start();
                             } else {
-                                console.log("Successful Purchase!");
-                                start();
-                            }
+                                // console.log("Successful Purchase!");
+                                // console.log("You just purchased " + )
+                                let newQty = results[0].stock_quantity - parseInt(answer.purchQty);
+                                connection.query("UPDATE products SET stock_quantity = " + newQty + " WHERE item_ID = " + answer.item, function (err, results) {
+                                    if (err) throw err;
+
+                                    start();
+                                }
+                                )
+                            };
                         });
                     };
-                };
+                }
             });
     });
 }
